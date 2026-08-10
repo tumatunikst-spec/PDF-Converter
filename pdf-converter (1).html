@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PDF CONVERTER — Created by SRIZON</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<style>
+/* ── Reset & Base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(135deg,#050510 0%,#0d0d2b 40%,#0a0a1f 70%,#080818 100%);font-family:'Rajdhani',sans-serif;color:#e0e0ff;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,212,255,.3);border-radius:99px}
+
+/* ── Keyframes ── */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 10px #00d4ff88)}50%{filter:drop-shadow(0 0 24px #00d4ffcc) drop-shadow(0 0 40px #b44fff66)}}
+@keyframes borderGlow{0%,100%{border-color:rgba(0,212,255,.18)}50%{border-color:rgba(180,79,255,.4)}}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes notifIn{from{opacity:0;transform:translateX(60px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+
+/* ── Layout ── */
+#particle-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+#app{position:relative;z-index:2;max-width:1320px;margin:0 auto;padding:0 18px}
+
+/* ── Header ── */
+header{padding:26px 0 14px;display:flex;align-items:center;justify-content:space-between}
+.logo-wrap{display:flex;align-items:center;gap:14px}
+.logo-icon{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#00d4ff,#b44fff);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 28px rgba(0,212,255,.45);flex-shrink:0}
+.app-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(18px,4vw,28px);letter-spacing:3px;background:linear-gradient(90deg,#00d4ff,#b44fff,#00ffaa,#00d4ff);background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradShift 5s ease infinite,glow 3s ease-in-out infinite}
+.app-subtitle{color:rgba(0,212,255,.5);font-size:10px;font-family:'Orbitron',sans-serif;letter-spacing:3px;margin-top:3px}
+.header-right{display:flex;align-items:center;gap:12px}
+.status-badge{padding:6px 14px;border-radius:100px;background:rgba(0,255,170,.08);border:1px solid rgba(0,255,170,.25);color:#00ffaa;font-size:11px;font-family:'Orbitron',sans-serif;letter-spacing:2px;display:flex;align-items:center;gap:7px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#00ffaa;animation:dotBlink 1.5s infinite;box-shadow:0 0 8px #00ffaa}
+.menu-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#aaa;width:40px;height:40px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.menu-btn:hover{background:rgba(255,255,255,.1);color:#00d4ff}
+
+/* ── Hero ── */
+.hero{text-align:center;padding:20px 20px 32px;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,212,255,.07) 0%,transparent 70%)}
+.hero-tagline{color:rgba(255,255,255,.3);font-size:15px;letter-spacing:1px;margin-bottom:6px}
+.hero-credit{color:rgba(255,255,255,.13);font-size:clamp(9px,1.5vw,13px);font-family:'Orbitron',sans-serif;letter-spacing:4px;margin-top:4px}
+
+/* ── Main Grid ── */
+.main-grid{display:flex;gap:18px;align-items:flex-start}
+.tools-sidebar{width:clamp(185px,21%,235px);flex-shrink:0;background:rgba(255,255,255,.025);backdrop-filter:blur(20px);border-radius:20px;border:1px solid rgba(255,255,255,.07);padding:16px;position:sticky;top:20px}
+.sidebar-label{color:rgba(255,255,255,.28);font-size:10px;font-family:'Orbitron',sans-serif;letter-spacing:3px;margin-bottom:14px;padding-left:4px}
+.tool-btn{width:100%;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;margin-bottom:6px;background:transparent;border:1px solid transparent;cursor:pointer;text-align:left;transition:all .2s}
+.tool-btn:hover{background:rgba(255,255,255,.04)}
+.tool-btn.active{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.35);box-shadow:0 0 20px rgba(0,212,255,.08)}
+.tool-icon{width:32px;height:32px;border-radius:8px;flex-shrink:0;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:15px;color:#666;border:1px solid transparent;transition:all .2s}
+.tool-btn.active .tool-icon{background:rgba(0,212,255,.15);color:#00d4ff;border-color:rgba(0,212,255,.3)}
+.tool-name{color:#888;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;margin-bottom:1px}
+.tool-btn.active .tool-name{color:#00d4ff}
+.tool-hint{color:rgba(255,255,255,.18);font-size:10px;font-family:'Rajdhani',sans-serif}
+.center-content{flex:1;min-width:0}
+.tab-bar{display:flex;gap:8px;margin-bottom:18px}
+.tab-btn{padding:9px 22px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#555;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;transition:all .2s}
+.tab-btn.active{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.4);color:#00d4ff}
+.panel{background:rgba(255,255,255,.025);backdrop-filter:blur(24px);border-radius:22px;border:1px solid rgba(255,255,255,.07);padding:clamp(14px,3.5%,26px);animation:borderGlow 4s ease-in-out infinite;min-height:400px}
+.panel-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.panel-icon{width:44px;height:44px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(180,79,255,.15));border:1px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:20px;color:#00d4ff}
+.panel-title{color:#fff;font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700}
+.panel-desc{color:rgba(255,255,255,.35);font-size:13px;font-family:'Rajdhani',sans-serif;margin-top:2px}
+
+/* ── Drop Zone ── */
+.drop-zone{border:2px dashed rgba(0,212,255,.35);border-radius:20px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(0,212,255,.03)}
+.drop-zone.drag-over{border-color:#b44fff;background:rgba(180,79,255,.08);box-shadow:0 0 40px rgba(180,79,255,.2)}
+.drop-icon{font-size:42px;margin-bottom:12px;opacity:.7;display:block;animation:float 3s ease-in-out infinite}
+.drop-zone.drag-over .drop-icon{animation:pulse .8s infinite}
+.drop-title{color:#00d4ff;font-family:'Orbitron',sans-serif;font-size:13px;margin-bottom:6px;letter-spacing:2px}
+.drop-hint{color:rgba(255,255,255,.4);font-family:'Rajdhani',sans-serif;font-size:13px}
+.drop-zone input[type="file"]{display:none}
+.file-list{margin-top:14px}
+.file-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.08);animation:fadeUp .3s ease}
+.file-ext{border-radius:8px;padding:4px 8px;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;min-width:44px;text-align:center;flex-shrink:0}
+.file-name{color:#e0e0ff;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.file-size{color:rgba(255,255,255,.35);font-size:11px;font-family:'Rajdhani',sans-serif}
+.file-info{flex:1;overflow:hidden}
+.file-remove{background:rgba(255,68,102,.1);border:1px solid rgba(255,68,102,.3);border-radius:8px;color:#ff4466;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.file-remove:hover{background:rgba(255,68,102,.2)}
+.progress-wrap{background:rgba(255,255,255,.07);border-radius:100px;height:6px;overflow:hidden;margin:8px 0 2px}
+.progress-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#00d4ff,#b44fff);transition:width .25s ease;box-shadow:0 0 10px rgba(0,212,255,.55)}
+.convert-btn{width:100%;margin-top:20px;padding:14px;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(180,79,255,.15));border:1px solid rgba(0,212,255,.45);color:#00d4ff;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;box-shadow:0 0 20px rgba(0,212,255,.12);transition:all .3s}
+.convert-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 30px rgba(0,212,255,.25)}
+.convert-btn:disabled{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:#555;cursor:not-allowed;transform:none;box-shadow:none}
+.spinner{display:inline-block;animation:spin 1s linear infinite;margin-right:8px}
+.success-banner{margin-top:14px;padding:14px;border-radius:12px;background:rgba(0,255,170,.06);border:1px solid rgba(0,255,170,.3);color:#00ffaa;font-family:'Rajdhani',sans-serif;font-size:14px;text-align:center;animation:fadeUp .3s ease}
+.error-banner{margin-top:14px;padding:14px;border-radius:12px;background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.3);color:#ff4466;font-family:'Rajdhani',sans-serif;font-size:13px;animation:fadeUp .3s ease}
+.option-label{color:rgba(255,255,255,.45);font-size:11px;font-family:'Orbitron',sans-serif;letter-spacing:2px;display:block;margin-bottom:8px;margin-top:14px}
+.format-row,.compress-row{display:flex;gap:10px;flex-wrap:wrap}
+.format-chip{padding:9px 18px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#888;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;transition:all .2s}
+.format-chip.active{background:rgba(180,79,255,.15);border-color:#b44fff;color:#b44fff}
+.compress-chip{flex:1;padding:9px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#888;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;transition:all .2s;text-align:center}
+.compress-chip.active{background:rgba(0,212,255,.15);border-color:#00d4ff;color:#00d4ff}
+.text-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:9px 14px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none}
+.text-input:focus{border-color:rgba(0,212,255,.6)}
+
+/* ── Info Sidebar ── */
+.info-sidebar{width:clamp(165px,18%,205px);flex-shrink:0;display:flex;flex-direction:column;gap:14px}
+.info-card{background:rgba(255,255,255,.025);backdrop-filter:blur(20px);border-radius:18px;border:1px solid rgba(255,255,255,.07);padding:15px}
+.info-card-title{color:rgba(255,255,255,.28);font-size:10px;font-family:'Orbitron',sans-serif;letter-spacing:3px;margin-bottom:13px}
+.format-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.format-row-info{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.format-label{color:rgba(255,255,255,.5);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600}
+.stat-num{color:#00d4ff;font-family:'Orbitron',sans-serif;font-size:32px;font-weight:900;text-align:center}
+.stat-sub{color:rgba(255,255,255,.28);font-size:11px;font-family:'Rajdhani',sans-serif;text-align:center;margin-top:2px}
+.tip-card{background:rgba(180,79,255,.06);border:1px solid rgba(180,79,255,.2);padding:15px;border-radius:18px}
+.tip-title{color:rgba(180,79,255,.7);font-size:10px;font-family:'Orbitron',sans-serif;letter-spacing:3px;margin-bottom:10px}
+.tip-text{color:rgba(255,255,255,.38);font-size:12px;font-family:'Rajdhani',sans-serif;line-height:1.75}
+.tip-text strong{color:rgba(180,79,255,.85)}
+
+/* ── History ── */
+.history-empty{text-align:center;padding:40px 0;color:rgba(255,255,255,.2);font-family:'Rajdhani',sans-serif;font-size:15px}
+.history-item{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)}
+.history-icon{font-size:18px;flex-shrink:0}
+.history-action{color:#ccc;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px}
+.history-time{color:rgba(255,255,255,.3);font-size:11px;font-family:'Rajdhani',sans-serif}
+.history-status{color:#00ffaa;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;flex-shrink:0}
+
+/* ── Notification ── */
+.notif{position:fixed;top:24px;right:24px;z-index:9999;background:rgba(10,10,30,.95);border-radius:14px;padding:13px 18px;display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:15px;backdrop-filter:blur(18px);max-width:380px;animation:notifIn .3s ease}
+.notif-close{background:none;border:none;cursor:pointer;font-size:18px;opacity:.7;margin-left:6px}
+.drawer-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:320px;z-index:1000;background:rgba(5,5,20,.97);backdrop-filter:blur(30px);border-left:1px solid rgba(255,255,255,.07);padding:24px;overflow-y:auto;animation:slideIn .3s ease}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.drawer-title{color:#fff;font-family:'Orbitron',sans-serif;font-size:14px}
+.drawer-close{background:none;border:none;color:#888;font-size:24px;cursor:pointer}
+
+/* ── Footer ── */
+footer{text-align:center;padding:36px 0 24px;border-top:1px solid rgba(255,255,255,.05);margin-top:44px}
+.footer-main{color:rgba(255,255,255,.09);font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:4px}
+.footer-sub{color:rgba(255,255,255,.05);font-family:'Rajdhani',sans-serif;font-size:12px;margin-top:8px}
+.floating-hex{position:fixed;bottom:24px;right:24px;z-index:10;pointer-events:none;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.15),transparent);border:1px solid rgba(0,212,255,.2);display:flex;align-items:center;justify-content:center;color:rgba(0,212,255,.3);font-size:20px;animation:float 4s ease-in-out infinite;box-shadow:0 0 30px rgba(0,212,255,.1)}
+
+/* ══════════════════════════════════════════════
+   MICROSOFT WORD–STYLE EDITOR
+══════════════════════════════════════════════ */
+.word-shell{border-radius:16px;overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08)}
+
+/* Title bar */
+.word-titlebar{background:linear-gradient(90deg,#2b579a,#1e4080);display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:34px;user-select:none}
+.word-titlebar-center{display:flex;align-items:center;gap:8px;position:absolute;left:50%;transform:translateX(-50%)}
+.word-titlebar-left{display:flex;align-items:center;gap:6px}
+.word-titlebar-right{display:flex;align-items:center;gap:4px}
+.word-doc-name{color:rgba(255,255,255,.92);font-family:'Segoe UI',Arial,sans-serif;font-size:12.5px;font-weight:400}
+.word-app-name{color:rgba(255,255,255,.6);font-family:'Segoe UI',Arial,sans-serif;font-size:12.5px}
+.word-win-btn{width:26px;height:26px;border:none;background:transparent;color:rgba(255,255,255,.75);cursor:pointer;border-radius:4px;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.word-win-btn:hover{background:rgba(255,255,255,.15)}
+.word-win-btn.close:hover{background:#e81123;color:#fff}
+.word-qs-btn{background:rgba(255,255,255,.12);border:none;color:rgba(255,255,255,.8);border-radius:3px;padding:2px 6px;font-size:11px;cursor:pointer;font-family:'Segoe UI',sans-serif}
+.word-qs-btn:hover{background:rgba(255,255,255,.22)}
+
+/* Menu bar */
+.word-menubar{background:#2b579a;display:flex;align-items:stretch;padding:0 8px;height:26px}
+.word-menu-item{color:rgba(255,255,255,.85);font-family:'Segoe UI',Arial,sans-serif;font-size:12px;padding:0 10px;display:flex;align-items:center;cursor:pointer;border-radius:3px;transition:all .12s;white-space:nowrap}
+.word-menu-item:hover{background:rgba(255,255,255,.18)}
+.word-menu-item.active-tab{background:rgba(255,255,255,.15);color:#fff}
+
+/* Ribbon */
+.word-ribbon{background:#f3f4f6;border-bottom:2px solid #c8c8c8;padding:4px 10px 6px;min-height:78px}
+.word-ribbon-groups{display:flex;align-items:flex-start;gap:0;flex-wrap:nowrap;overflow-x:auto}
+.word-ribbon-group{display:flex;flex-direction:column;border-right:1px solid #d0d0d0;padding:3px 10px 2px;min-width:0;flex-shrink:0}
+.word-ribbon-group:last-child{border-right:none}
+.word-group-name{font-family:'Segoe UI',Arial,sans-serif;font-size:9.5px;color:#666;text-align:center;margin-top:3px;letter-spacing:.3px}
+.word-group-tools{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.rb{background:transparent;border:1px solid transparent;border-radius:3px;padding:3px 5px;cursor:pointer;font-size:12px;color:#1a1a1a;font-family:'Segoe UI',Arial,sans-serif;transition:all .12s;display:flex;align-items:center;justify-content:center;min-width:26px;height:26px;white-space:nowrap}
+.rb:hover{background:#dde7f5;border-color:#adc5e8}
+.rb.on{background:#c7ddf5;border-color:#7ab0e0;color:#1a3a6b}
+.rb-select{border:1px solid #c0c0c0;border-radius:3px;padding:2px 4px;font-size:11px;font-family:'Segoe UI',Arial,sans-serif;color:#222;background:#fff;cursor:pointer;height:24px;outline:none}
+.rb-select:focus{border-color:#7ab0e0}
+.rb-sep{width:1px;background:#d0d0d0;height:24px;margin:0 3px;align-self:center}
+.rb-color-wrap{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+.rb-color-bar{width:18px;height:4px;border-radius:1px}
+.rb-icon{font-size:14px;line-height:1}
+.rb-big{flex-direction:column;height:52px;min-width:36px;padding:4px 6px;gap:2px;font-size:11px}
+.rb-big .rb-icon{font-size:20px}
+
+/* Ruler */
+.word-ruler-wrap{background:#f0f0f0;border-bottom:1px solid #c8c8c8;height:20px;display:flex;align-items:center;padding:0;overflow:hidden;position:relative}
+.word-ruler{width:100%;height:20px;display:block}
+
+/* Page area */
+.word-page-area{background:#b8bcc4;padding:20px 0;min-height:500px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:20px;max-height:580px}
+.word-page{width:794px;min-height:1123px;background:#ffffff;box-shadow:0 2px 12px rgba(0,0,0,.35);padding:96px 96px 80px;position:relative;box-sizing:border-box}
+.word-page-content{min-height:200px;outline:none;font-family:Calibri,Arial,sans-serif;font-size:12pt;line-height:1.6;color:#000000;cursor:text}
+.word-page-content:empty::before{content:'Click here and start typing your document...';color:#aaa;pointer-events:none}
+.word-page-content table{border-collapse:collapse;width:100%;margin:8px 0}
+.word-page-content td,.word-page-content th{border:1px solid #999;padding:5px 9px}
+.word-page-content h1{font-size:20pt;font-weight:bold;margin:14px 0 8px}
+.word-page-content h2{font-size:16pt;font-weight:bold;margin:12px 0 6px}
+.word-page-content h3{font-size:13pt;font-weight:bold;margin:10px 0 5px}
+.word-page-content p{margin:0 0 8px}
+.word-page-content ul,.word-page-content ol{margin:4px 0 8px;padding-left:28px}
+
+/* Status bar */
+.word-statusbar{background:#2b579a;display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:24px}
+.word-status-left,.word-status-right{display:flex;align-items:center;gap:14px}
+.word-status-item{color:rgba(255,255,255,.75);font-family:'Segoe UI',Arial,sans-serif;font-size:11px}
+.word-zoom-row{display:flex;align-items:center;gap:6px}
+.word-zoom-slider{width:80px;height:4px;accent-color:#fff;cursor:pointer}
+
+/* Export button strip */
+.word-export-strip{background:#f7f7f7;border-top:1px solid #d0d0d0;padding:8px 14px;display:flex;gap:10px;align-items:center}
+.word-export-btn{padding:6px 18px;border-radius:4px;cursor:pointer;background:#2b579a;border:none;color:#fff;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;transition:all .2s}
+.word-export-btn:hover{background:#1e4080;transform:translateY(-1px)}
+.word-export-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.word-export-btn.secondary{background:transparent;color:#2b579a;border:1px solid #2b579a}
+.word-export-btn.secondary:hover{background:#e8eef8}
+.word-export-info{color:#888;font-size:11px;font-family:'Segoe UI',Arial,sans-serif;margin-left:auto}
+
+/* Responsive */
+@media(max-width:1100px){.info-sidebar{display:none}}
+@media(max-width:860px){.word-page{width:100%;min-height:600px;padding:60px 50px}}
+@media(max-width:640px){
+  .tools-sidebar{width:100%;position:static;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding:10px 12px}
+  .sidebar-label,.tool-hint{display:none}
+  .tool-btn{min-width:90px;margin-bottom:0;flex-shrink:0;padding:8px 10px}
+  .main-grid{flex-direction:column}
+  .app-title{font-size:15px;letter-spacing:1px}
+  .word-page-area{padding:12px 0}
+  .word-ribbon-groups{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+<div class="scanlines"></div>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-wrap">
+      <div class="logo-icon">⬡</div>
+      <div>
+        <div class="app-title">PDF CONVERTER</div>
+        <div class="app-subtitle">NEXT-GEN DOCUMENT SUITE</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge"><span class="status-dot"></span><span>ONLINE</span></div>
+      <button class="menu-btn" onclick="toggleDrawer()">☰</button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-tagline">Convert · Merge · Split · Compress · Create — Real PDF Files · High Resolution</p>
+    <p class="hero-credit">CREATED BY SRIZON</p>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- TOOL SIDEBAR -->
+    <div class="tools-sidebar">
+      <div class="sidebar-label">TOOLS</div>
+      <button class="tool-btn active" data-tool="to-pdf" onclick="selTool(this)"><span class="tool-icon">⬆</span><div><div class="tool-name">Convert to PDF</div><div class="tool-hint">IMG DOCX TXT XLSX PPTX</div></div></button>
+      <button class="tool-btn" data-tool="from-pdf" onclick="selTool(this)"><span class="tool-icon">⬇</span><div><div class="tool-name">PDF to Format</div><div class="tool-hint">JPG PNG TXT DOCX</div></div></button>
+      <button class="tool-btn" data-tool="merge" onclick="selTool(this)"><span class="tool-icon">⊕</span><div><div class="tool-name">Merge PDFs</div><div class="tool-hint">Combine files</div></div></button>
+      <button class="tool-btn" data-tool="split" onclick="selTool(this)"><span class="tool-icon">⊗</span><div><div class="tool-name">Split PDF</div><div class="tool-hint">Extract pages</div></div></button>
+      <button class="tool-btn" data-tool="compress" onclick="selTool(this)"><span class="tool-icon">◈</span><div><div class="tool-name">Compress PDF</div><div class="tool-hint">Reduce size</div></div></button>
+      <button class="tool-btn" data-tool="create" onclick="selTool(this)"><span class="tool-icon">✦</span><div><div class="tool-name">Create PDF</div><div class="tool-hint">Word-style editor</div></div></button>
+    </div>
+
+    <!-- CENTER PANEL -->
+    <div class="center-content">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="swTab(this,'convert')">CONVERT</button>
+        <button class="tab-btn" onclick="swTab(this,'history')">HISTORY</button>
+      </div>
+      <div class="panel" id="main-panel"></div>
+    </div>
+
+    <!-- RIGHT INFO -->
+    <div class="info-sidebar">
+      <div class="info-card">
+        <div class="info-card-title">FORMATS</div>
+        <div class="format-row-info"><span class="format-dot" style="background:#ff6b6b;box-shadow:0 0 8px #ff6b6b"></span><span class="format-label">PDF</span></div>
+        <div class="format-row-info"><span class="format-dot" style="background:#ffd93d;box-shadow:0 0 8px #ffd93d"></span><span class="format-label">JPG</span></div>
+        <div class="format-row-info"><span class="format-dot" style="background:#6bcb77;box-shadow:0 0 8px #6bcb77"></span><span class="format-label">PNG</span></div>
+        <div class="format-row-info"><span class="format-dot" style="background:#4d96ff;box-shadow:0 0 8px #4d96ff"></span><span class="format-label">DOCX</span></div>
+        <div class="format-row-info"><span class="format-dot" style="background:#c77dff;box-shadow:0 0 8px #c77dff"></span><span class="format-label">TXT</span></div>
+        <div class="format-row-info"><span class="format-dot" style="background:#56cfe1;box-shadow:0 0 8px #56cfe1"></span><span class="format-label">XLSX</span></div>
+        <div class="format-row-info"><span class="format-dot" style="background:#ff9a3c;box-shadow:0 0 8px #ff9a3c"></span><span class="format-label">PPTX</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">SESSION</div>
+        <div class="stat-num" id="stat-count">0</div>
+        <div class="stat-sub">Files Processed</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">QUALITY</div>
+        <p class="tip-text"><strong>4× resolution</strong> rendering — crystal-clear PDFs with no blurriness!</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p class="footer-main">PDF CONVERTER · CREATED BY SRIZON · NEXT-GEN DOCUMENT SUITE</p>
+    <p class="footer-sub">All processing done locally in your browser · No files uploaded to any server</p>
+  </footer>
+</div>
+
+<!-- DRAWER -->
+<div id="drawer-overlay" class="drawer-overlay" style="display:none" onclick="toggleDrawer()"></div>
+<div id="drawer" class="drawer" style="display:none">
+  <div class="drawer-header"><div class="drawer-title">⌛ HISTORY</div><button class="drawer-close" onclick="toggleDrawer()">×</button></div>
+  <div id="drawer-history"></div>
+</div>
+<div class="floating-hex">⬡</div>
+
+<script>
+/* ═══════════ PDF.JS WORKER ═══════════ */
+window.addEventListener('load',()=>{
+  if(typeof pdfjsLib!=='undefined')
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+});
+
+/* ═══════════ STATE ═══════════ */
+const S={tool:'to-pdf',tab:'convert',files:[],fmt:'JPG',cmpr:'medium',split:'1-3',hist:[],cnt:0,busy:false,done:false};
+const TM={
+  'to-pdf':  {icon:'⬆',label:'Convert to PDF',  desc:'JPG PNG DOCX TXT XLSX PPTX → High-Res PDF',acc:'.jpg,.jpeg,.png,.gif,.bmp,.webp,.docx,.doc,.txt,.xls,.xlsx,.ppt,.pptx',multi:false},
+  'from-pdf':{icon:'⬇',label:'PDF to Format',   desc:'PDF → JPG PNG TXT DOCX',               acc:'.pdf',multi:false},
+  'merge':   {icon:'⊕',label:'Merge PDFs',      desc:'Combine multiple PDFs into one',        acc:'.pdf',multi:true},
+  'split':   {icon:'⊗',label:'Split PDF',       desc:'Extract page range to new PDF',         acc:'.pdf',multi:false},
+  'compress':{icon:'◈',label:'Compress PDF',    desc:'Reduce PDF file size',                  acc:'.pdf',multi:false},
+  'create':  {icon:'✦',label:'Create PDF',      desc:'Microsoft Word–style editor',           acc:null,   multi:false}
+};
+const EC={PDF:'#ff6b6b',JPG:'#ffd93d',PNG:'#6bcb77',DOCX:'#4d96ff',DOC:'#4d96ff',TXT:'#c77dff',XLSX:'#56cfe1',XLS:'#56cfe1',PPT:'#ff9a3c',PPTX:'#ff9a3c',GIF:'#6bcb77',BMP:'#ffd93d',WEBP:'#6bcb77'};
+
+/* ═══════════ PARTICLES ═══════════ */
+(()=>{
+  const cv=document.getElementById('particle-canvas'),ctx=cv.getContext('2d');
+  let w,h;
+  const rs=()=>{w=cv.width=innerWidth;h=cv.height=innerHeight};rs();
+  addEventListener('resize',rs);
+  const ps=Array.from({length:80},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.5+.3,dx:(Math.random()-.5)*.4,dy:(Math.random()-.5)*.4,a:Math.random()*.6+.1,c:Math.random()>.5?'#00d4ff':'#b44fff'}));
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    ps.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>w)p.dx*=-1;if(p.y<0||p.y>h)p.dy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.globalAlpha=p.a;ctx.fill()});
+    ctx.globalAlpha=1;
+    for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const d=Math.hypot(ps[i].x-ps[j].x,ps[i].y-ps[j].y);if(d<110){ctx.beginPath();ctx.moveTo(ps[i].x,ps[i].y);ctx.lineTo(ps[j].x,ps[j].y);ctx.strokeStyle='#00d4ff';ctx.globalAlpha=(1-d/110)*.07;ctx.lineWidth=.5;ctx.stroke()}}
+    ctx.globalAlpha=1;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════ NOTIFY ═══════════ */
+function notify(msg,type='info'){
+  const cl={success:'#00ffaa',error:'#ff4466',info:'#00d4ff'}[type];
+  const ic={success:'✓',error:'✕',info:'ℹ'}[type];
+  const el=document.createElement('div');el.className='notif';
+  el.style.cssText=`border:1px solid ${cl};color:${cl};box-shadow:0 0 24px ${cl}44`;
+  el.innerHTML=`<span style="font-size:18px">${ic}</span><span style="flex:1">${msg}</span><button class="notif-close" style="color:${cl}" onclick="this.parentNode.remove()">×</button>`;
+  document.body.appendChild(el);setTimeout(()=>{if(el.parentNode)el.remove()},5000);
+}
+
+/* ═══════════ NAV ═══════════ */
+function selTool(b){
+  document.querySelectorAll('.tool-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  S.tool=b.dataset.tool;S.files=[];S.done=false;S.busy=false;S.tab='convert';
+  document.querySelectorAll('.tab-btn').forEach((x,i)=>x.classList.toggle('active',i===0));
+  render();
+}
+function swTab(b,tab){
+  S.tab=tab;
+  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');render();
+}
+
+/* ═══════════ RENDER ═══════════ */
+function render(){
+  const p=document.getElementById('main-panel');
+  if(S.tab==='history'){rHistory(p);return}
+  if(S.tool==='create'){rCreate(p);return}
+  rConverter(p);
+}
+
+function rConverter(panel){
+  const m=TM[S.tool];panel.innerHTML='';
+  // Header
+  const hdr=ce('div','panel-header');
+  hdr.innerHTML=`<div class="panel-icon">${m.icon}</div><div><div class="panel-title">${m.label}</div><div class="panel-desc">${m.desc}</div></div>`;
+  panel.appendChild(hdr);
+  // Drop zone
+  if(m.acc){
+    const dz=ce('div','drop-zone');dz.id='dz';
+    dz.innerHTML=`<input type="file" id="fi" accept="${m.acc}" ${m.multi?'multiple':''}><span class="drop-icon" id="di">📁</span><p class="drop-title">DROP FILES HERE</p><p class="drop-hint">or click to browse · supports ${m.acc.split(',').slice(0,5).join(' ').toUpperCase()}</p>`;
+    dz.onclick=()=>document.getElementById('fi').click();
+    dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag-over');document.getElementById('di').textContent='📂'};
+    dz.ondragleave=()=>{dz.classList.remove('drag-over');document.getElementById('di').textContent='📁'};
+    dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag-over');document.getElementById('di').textContent='📁';addF(Array.from(e.dataTransfer.files),m.multi)};
+    panel.appendChild(dz);
+    setTimeout(()=>{const fi=document.getElementById('fi');if(fi)fi.onchange=e=>addF(Array.from(e.target.files),m.multi)},10);
+  }
+  const fl=ce('div','file-list');fl.id='fl';panel.appendChild(fl);rFiles();
+  // Extra options
+  const ex=ce('div');ex.id='ex';
+  if(S.tool==='from-pdf')ex.innerHTML=`<span class="option-label">OUTPUT FORMAT</span><div class="format-row">${['JPG','PNG','TXT','DOCX'].map(f=>`<button class="format-chip${S.fmt===f?' active':''}" onclick="setF('${f}',this)">${f}</button>`).join('')}</div>`;
+  if(S.tool==='split')ex.innerHTML=`<span class="option-label">PAGE RANGE (e.g. 1-3, 5, 7)</span><input class="text-input" value="${S.split}" oninput="S.split=this.value" placeholder="1-3, 5, 7"/>`;
+  if(S.tool==='compress')ex.innerHTML=`<span class="option-label">COMPRESSION LEVEL</span><div class="compress-row">${['low','medium','high'].map(l=>`<button class="compress-chip${S.cmpr===l?' active':''}" onclick="setC('${l}',this)">${l}</button>`).join('')}</div>`;
+  panel.appendChild(ex);
+  // Button
+  const btn=ce('button','convert-btn');btn.id='cvb';btn.onclick=go;
+  btn.textContent=S.done?'✓ Convert Again':`⚡ ${m.label.toUpperCase()}`;
+  if(S.busy){btn.disabled=true;btn.innerHTML='<span class="spinner">⟳</span> PROCESSING...'}
+  panel.appendChild(btn);
+  if(S.done){const b=ce('div','success-banner');b.textContent='✓ High-resolution PDF downloaded! Check your downloads folder.';panel.appendChild(b)}
+}
+
+function rFiles(){
+  const l=document.getElementById('fl');if(!l)return;l.innerHTML='';
+  S.files.forEach((f,i)=>{
+    const ext=f.name.split('.').pop().toUpperCase();const cl=EC[ext]||'#aaa';
+    const sz=f.size>1048576?`${(f.size/1048576).toFixed(1)} MB`:`${(f.size/1024).toFixed(0)} KB`;
+    const c=ce('div','file-card');c.id=`fc${i}`;
+    c.innerHTML=`<div class="file-ext" style="background:${cl}22;border:1px solid ${cl}55;color:${cl}">${ext}</div><div class="file-info"><div class="file-name">${f.name}</div><div class="file-size">${sz}</div>${f._p!=null?`<div class="progress-wrap"><div class="progress-fill" id="pf${i}" style="width:${f._p}%"></div></div>`:''}</div><button class="file-remove" onclick="rmF(${i})">×</button>`;
+    l.appendChild(c);
+  });
+}
+function addF(nf,multi){S.files=multi?[...S.files,...nf]:[nf[0]];S.done=false;rFiles()}
+function rmF(i){S.files.splice(i,1);rFiles()}
+function setF(f,b){S.fmt=f;document.querySelectorAll('.format-chip').forEach(x=>x.classList.remove('active'));b.classList.add('active')}
+function setC(l,b){S.cmpr=l;document.querySelectorAll('.compress-chip').forEach(x=>x.classList.remove('active'));b.classList.add('active')}
+function sp(i,v){if(S.files[i])S.files[i]._p=v;const b=document.getElementById(`pf${i}`);if(b)b.style.width=v+'%'}
+function ce(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e}
+function bname(f){return f.name.replace(/\.[^.]+$/,'')}
+
+/* ═══════════ GO ═══════════ */
+async function go(){
+  if(!S.files.length){notify('Please add at least one file!','error');return}
+  if(S.busy)return;
+  S.busy=true;S.done=false;
+  const btn=document.getElementById('cvb');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner">⟳</span> PROCESSING...'}
+  S.files.forEach((f,i)=>{f._p=0});rFiles();S.files.forEach((_,i)=>sp(i,5));
+  const m=TM[S.tool];const panel=document.getElementById('main-panel');
+  try{
+    let total=0;
+    if(S.tool==='merge'){sp(0,30);const[blob,name]=await doMerge(S.files);sp(0,100);dl(blob,name);total=1;}
+    else{
+      for(let i=0;i<S.files.length;i++){
+        const f=S.files[i];sp(i,20);
+        let res=[];
+        if(S.tool==='to-pdf')res=[await doCvtToPDF(f,i)];
+        else if(S.tool==='from-pdf')res=await doCvtFromPDF(f,S.fmt,i);
+        else if(S.tool==='split')res=[await doSplit(f,S.split)];
+        else if(S.tool==='compress')res=[await doCompress(f,S.cmpr)];
+        sp(i,100);res.forEach(([b,n])=>dl(b,n));total+=res.length;
+      }
+    }
+    S.busy=false;S.done=true;S.cnt+=total;
+    const sc=document.getElementById('stat-count');if(sc)sc.textContent=S.cnt;
+    S.hist.unshift({icon:m.icon,action:`${m.label} — ${total} file(s)`,time:new Date().toLocaleTimeString()});
+    updDH();notify(`${total} high-resolution PDF file(s) downloaded!`,'success');
+    if(btn){btn.disabled=false;btn.textContent='✓ Convert Again'}
+    if(panel&&!panel.querySelector('.success-banner')){const b=ce('div','success-banner');b.textContent='✓ High-resolution PDF downloaded!';panel.appendChild(b)}
+  }catch(err){
+    console.error(err);S.busy=false;
+    if(btn){btn.disabled=false;btn.textContent=`⚡ ${m.label.toUpperCase()}`}
+    notify('Error: '+err.message,'error');
+    if(panel){const b=ce('div','error-banner');b.textContent='⚠ '+err.message;panel.appendChild(b)}
+  }
+}
+
+/* ═══════════ UTILS ═══════════ */
+function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(u),8000)}
+const rDAB=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsArrayBuffer(f)});
+const rDURL=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(f)});
+function xXml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
+
+/* ═══════════ HIGH-RES CANVAS → PDF ═══════════ */
+// Scale 4x for ultra-sharp output (300dpi equivalent)
+async function hqCanvasToPDF(wrap){
+  const SCALE=4; // ← 4× = ultra-sharp
+  const canvas=await html2canvas(wrap,{
+    scale:SCALE,
+    backgroundColor:'#ffffff',
+    useCORS:true,
+    allowTaint:true,
+    logging:false,
+    imageTimeout:15000,
+    removeContainer:false,
+    letterRendering:true,
+  });
+  const{jsPDF}=window.jspdf;
+  // A4 at 72dpi in jsPDF = 595.28 × 841.89 pt
+  const pdf=new jsPDF({unit:'pt',format:'a4',compress:false});
+  const A4W=595.28,A4H=841.89;
+  const iw=canvas.width,ih=canvas.height;
+  const ratio=A4W/iw; // fit width
+  const totalPageH=ih*ratio;
+  let posY=0,pg=0;
+  while(posY<totalPageH){
+    if(pg>0)pdf.addPage('a4','portrait');
+    const srcY=posY/ratio;
+    const srcH=Math.min(A4H/ratio,ih-srcY);
+    const sliceH=srcH*ratio;
+    // render this page-slice to a sub-canvas
+    const sl=document.createElement('canvas');sl.width=iw;sl.height=Math.ceil(srcH);
+    const ctx=sl.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,iw,Math.ceil(srcH));
+    ctx.drawImage(canvas,0,srcY,iw,srcH,0,0,iw,srcH);
+    // Use JPEG at 98% quality for maximum sharpness
+    const dataUrl=sl.toDataURL('image/jpeg',0.98);
+    pdf.addImage(dataUrl,'JPEG',0,0,A4W,sliceH,undefined,'FAST');
+    posY+=A4H;pg++;
+  }
+  return pdf.output('blob');
+}
+
+/* ═══════════ CONVERT TO PDF (high-res) ═══════════ */
+async function doCvtToPDF(file,idx){
+  const ext=file.name.split('.').pop().toLowerCase();
+  let blob;
+  if(['jpg','jpeg','png','gif','bmp','webp'].includes(ext))blob=await imgToPDF(file,idx);
+  else if(ext==='txt')blob=await txtToPDF(file,idx);
+  else if(['doc','docx'].includes(ext))blob=await docxToPDF(file,idx);
+  else if(['xls','xlsx'].includes(ext))blob=await xlsxToPDF(file,idx);
+  else if(['ppt','pptx'].includes(ext))blob=await pptxToPDF(file,idx);
+  else throw new Error(`Unsupported: .${ext}`);
+  return[blob,bname(file)+'.pdf'];
+}
+
+async function imgToPDF(file,idx){
+  const url=await rDURL(file);
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        sp(idx,50);
+        const{jsPDF}=window.jspdf;
+        const{jsPDF:_}=window.jspdf;
+        // Determine orientation
+        const lnd=img.width>img.height;
+        const pw=lnd?841.89:595.28,ph=lnd?595.28:841.89;
+        const pdf=new jsPDF({unit:'pt',format:[pw,ph],compress:false});
+        let fw=img.width,fh=img.height;
+        if(fw>pw){fh*=pw/fw;fw=pw}if(fh>ph){fw*=ph/fh;fh=ph}
+        const x=(pw-fw)/2,y=(ph-fh)/2;
+        const fmt=file.name.split('.').pop().toLowerCase()==='png'?'PNG':'JPEG';
+        pdf.addImage(url,fmt,x,y,fw,fh,undefined,'NONE'); // NONE = no compression = max quality
+        sp(idx,90);res(pdf.output('blob'));
+      }catch(e){rej(e)}
+    };
+    img.onerror=rej;img.src=url;
+  });
+}
+
+async function txtToPDF(file,idx){
+  const text=await file.text();sp(idx,40);
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:'pt',format:'a4',compress:false});
+  const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),mg=65;
+  pdf.setFont('helvetica','normal');pdf.setFontSize(11);pdf.setTextColor(20,20,20);
+  // Title
+  pdf.setFontSize(13);pdf.setFont('helvetica','bold');pdf.text(bname(file),mg,mg-10);
+  pdf.setFontSize(11);pdf.setFont('helvetica','normal');
+  const lines=pdf.splitTextToSize(text,pw-mg*2);
+  let y=mg+20;
+  lines.forEach(l=>{if(y>ph-mg){pdf.addPage();y=mg+20}pdf.text(l,mg,y);y+=15});
+  sp(idx,90);return pdf.output('blob');
+}
+
+async function docxToPDF(file,idx){
+  if(typeof mammoth==='undefined')throw new Error('mammoth.js not loaded.');
+  const ab=await rDAB(file);sp(idx,25);
+  const result=await mammoth.convertToHtml({arrayBuffer:ab});sp(idx,50);
+  const wrap=document.createElement('div');
+  // Exact A4 page size render at 96dpi → 794px wide
+  wrap.style.cssText='position:fixed;top:-39999px;left:-39999px;width:794px;background:#fff;color:#111;font-family:Calibri,Arial,sans-serif;font-size:12pt;line-height:1.6;padding:80px 80px;box-sizing:border-box;';
+  wrap.innerHTML=result.value||'<p>(empty document)</p>';
+  document.body.appendChild(wrap);
+  try{sp(idx,65);const blob=await hqCanvasToPDF(wrap);document.body.removeChild(wrap);sp(idx,92);return blob;}
+  catch(e){document.body.removeChild(wrap);throw e}
+}
+
+async function xlsxToPDF(file,idx){
+  if(typeof XLSX==='undefined')throw new Error('SheetJS not loaded.');
+  const ab=await rDAB(file);sp(idx,25);
+  const wb=XLSX.read(ab,{type:'array'});sp(idx,45);
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:'a4',compress:false});
+  const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),mg=28;
+  let first=true;
+  wb.SheetNames.forEach(sn=>{
+    const data=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
+    if(!data.length)return;if(!first)pdf.addPage();first=false;
+    const cols=Math.max(...data.map(r=>r.length),1);
+    const cw=Math.min((pw-mg*2)/Math.min(cols,22),115);
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(18,52,110);pdf.text(sn,mg,mg+10);
+    let y=mg+26;
+    data.forEach((row,ri)=>{
+      if(y>ph-mg){pdf.addPage();y=mg+18}
+      if(ri===0){pdf.setFillColor(214,228,248);pdf.rect(mg,y-12,(pw-mg*2),16,'F')}
+      else if(ri%2===0){pdf.setFillColor(246,249,254);pdf.rect(mg,y-12,(pw-mg*2),16,'F')}
+      pdf.setFont('helvetica',ri===0?'bold':'normal');pdf.setFontSize(8.5);
+      pdf.setTextColor(ri===0?10:40,ri===0?42:42,ri===0?100:60);
+      pdf.setDrawColor(192,208,228);
+      row.slice(0,22).forEach((cell,ci)=>{
+        pdf.rect(mg+ci*cw,y-12,cw,16,'S');
+        const t=(pdf.splitTextToSize(String(cell),cw-4)[0])||'';
+        pdf.text(t,mg+ci*cw+3,y);
+      });
+      y+=16;
+    });
+  });
+  sp(idx,90);return pdf.output('blob');
+}
+
+async function pptxToPDF(file,idx){
+  if(typeof JSZip==='undefined')throw new Error('JSZip not loaded.');
+  const ab=await rDAB(file);sp(idx,22);
+  let slides=[];
+  try{
+    const zip=await JSZip.loadAsync(ab);
+    const sfs=Object.keys(zip.files).filter(n=>n.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b)=>+a.match(/\d+/)[0]-+b.match(/\d+/)[0]);
+    for(const sf of sfs){const xml=await zip.files[sf].async('string');const txts=[...xml.matchAll(/<a:t[^>]*>([^<]*)<\/a:t>/g)].map(m=>m[1].trim()).filter(Boolean);slides.push(txts)}
+  }catch(e){console.warn(e)}
+  sp(idx,52);
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:'a4',compress:false});
+  const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),mg=50;
+  if(!slides.length)slides=[['PowerPoint Presentation','Content extracted from: '+file.name]];
+  slides.forEach((txts,si)=>{
+    if(si>0)pdf.addPage();
+    pdf.setFillColor(243,246,254);pdf.rect(0,0,pw,ph,'F');
+    pdf.setFillColor(18,70,150);pdf.rect(0,0,pw,9,'F');pdf.rect(0,ph-9,pw,9,'F');
+    pdf.setFontSize(8);pdf.setTextColor(140,148,170);pdf.text(`${si+1}/${slides.length}`,pw-mg,ph-18,{align:'right'});
+    let y=mg+24,td=false;
+    txts.forEach(txt=>{
+      if(!txt||y>ph-mg)return;
+      if(!td){pdf.setFontSize(22);pdf.setFont('helvetica','bold');pdf.setTextColor(12,42,108);const ls=pdf.splitTextToSize(txt,pw-mg*2);pdf.text(ls,mg,y);y+=ls.length*26+14;td=true;}
+      else{pdf.setFontSize(11);pdf.setFont('helvetica','normal');pdf.setTextColor(50,52,72);const ls=pdf.splitTextToSize(txt,pw-mg*2-20);pdf.setFillColor(18,70,150);pdf.circle(mg+5,y-4,3,'F');pdf.text(ls,mg+16,y);y+=ls.length*15+5;}
+    });
+  });
+  sp(idx,90);return pdf.output('blob');
+}
+
+/* ═══════════ PDF → OTHER ═══════════ */
+async function doCvtFromPDF(file,fmt,idx){
+  if(fmt==='TXT')return[[await pdfToTxt(file,idx),bname(file)+'.txt']];
+  if(fmt==='DOCX')return[[await pdfToDocx(file,idx),bname(file)+'.docx']];
+  return pdfToImgs(file,fmt,idx);
+}
+
+async function pdfToImgs(file,fmt,idx){
+  if(typeof pdfjsLib==='undefined')throw new Error('PDF.js not loaded.');
+  const ab=await rDAB(file);sp(idx,15);
+  const doc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
+  const n=doc.numPages;const res=[];
+  for(let i=1;i<=n;i++){
+    const page=await doc.getPage(i);
+    const vp=page.getViewport({scale:3.0}); // 3× = high-res images
+    const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+    const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,vp.width,vp.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    const blob=await new Promise(r=>cv.toBlob(r,fmt==='PNG'?'image/png':'image/jpeg',0.97));
+    res.push([blob,`${bname(file)}${n>1?`_p${i}`:''}.${fmt.toLowerCase()}`]);
+    sp(idx,15+Math.round(i/n*80));
+  }
+  return res;
+}
+
+async function pdfToTxt(file,idx){
+  if(typeof pdfjsLib==='undefined')throw new Error('PDF.js not loaded.');
+  const ab=await rDAB(file);sp(idx,18);
+  const doc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
+  let txt=`${file.name}\nExtracted by PDF Converter · Created by SRIZON\n${'─'.repeat(50)}\n\n`;
+  for(let i=1;i<=doc.numPages;i++){const p=await doc.getPage(i);const c=await p.getTextContent();txt+=`── Page ${i} ──\n${c.items.map(x=>x.str).join(' ')}\n\n`;sp(idx,18+Math.round(i/doc.numPages*74))}
+  return new Blob([txt],{type:'text/plain'});
+}
+
+async function pdfToDocx(file,idx){
+  if(typeof pdfjsLib==='undefined')throw new Error('PDF.js not loaded.');
+  if(typeof JSZip==='undefined')throw new Error('JSZip not loaded.');
+  const ab=await rDAB(file);sp(idx,18);
+  const doc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
+  const pages=[];
+  for(let i=1;i<=doc.numPages;i++){const p=await doc.getPage(i);const c=await p.getTextContent();pages.push(c.items.map(x=>x.str).join(' '));sp(idx,18+Math.round(i/doc.numPages*55))}
+  sp(idx,80);
+  const lines=[bname(file),...pages.flatMap(p=>p.split('\n').filter(Boolean)),'','— PDF Converter by SRIZON'];
+  return mkDocx(lines,bname(file));
+}
+
+/* ═══════════ REAL DOCX ═══════════ */
+async function mkDocx(lines,title){
+  if(typeof JSZip==='undefined')throw new Error('JSZip not loaded.');
+  const paras=lines.map((l,i)=>{const b=i===0;return `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr><w:r><w:rPr>${b?'<w:b/><w:sz w:val="32"/>':''}</w:rPr><w:t xml:space="preserve">${xXml(l)}</w:t></w:r></w:p>`}).join('\n');
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" mc:Ignorable="w14 w15"><w:body>${paras}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
+  const wRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/></Relationships>`;
+  const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults></w:styles>`;
+  const set=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`;
+  const core=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xXml(title)}</dc:title><dc:creator>SRIZON PDF Converter</dc:creator><cp:lastModifiedBy>SRIZON PDF Converter</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString()}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${new Date().toISOString()}</dcterms:modified></cp:coreProperties>`;
+  const zip=new JSZip();
+  zip.file('[Content_Types].xml',ct);zip.file('_rels/.rels',rels);
+  zip.file('word/document.xml',doc);zip.file('word/_rels/document.xml.rels',wRels);
+  zip.file('word/styles.xml',sty);zip.file('word/settings.xml',set);
+  zip.file('docProps/core.xml',core);
+  return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',compression:'DEFLATE',compressionOptions:{level:6}});
+}
+
+/* ═══════════ MERGE / SPLIT / COMPRESS ═══════════ */
+async function doMerge(files){
+  if(typeof PDFLib==='undefined')throw new Error('pdf-lib not loaded.');
+  const merged=await PDFLib.PDFDocument.create();
+  for(let i=0;i<files.length;i++){const ab=await rDAB(files[i]);const src=await PDFLib.PDFDocument.load(ab,{ignoreEncryption:true});const pgs=await merged.copyPages(src,src.getPageIndices());pgs.forEach(p=>merged.addPage(p));sp(0,Math.round((i+1)/files.length*90))}
+  merged.setProducer('PDF Converter by SRIZON');merged.setCreator('PDF Converter by SRIZON');
+  return[new Blob([await merged.save()],{type:'application/pdf'}),'merged.pdf'];
+}
+function parseRange(str,total){const ps=new Set();str.split(',').forEach(p=>{const t=p.trim();if(t.includes('-')){const[a,b]=t.split('-').map(Number);for(let i=a;i<=Math.min(b,total);i++)if(i>=1)ps.add(i)}else{const n=parseInt(t);if(n>=1&&n<=total)ps.add(n)}});return[...ps].sort((a,b)=>a-b)}
+async function doSplit(file,range){
+  if(typeof PDFLib==='undefined')throw new Error('pdf-lib not loaded.');
+  const ab=await rDAB(file);sp(0,22);
+  const src=await PDFLib.PDFDocument.load(ab,{ignoreEncryption:true});
+  const total=src.getPageCount();sp(0,48);
+  const pages=parseRange(range,total);
+  if(!pages.length)throw new Error(`Invalid range. PDF has ${total} pages.`);
+  const out=await PDFLib.PDFDocument.create();
+  const copied=await out.copyPages(src,pages.map(p=>p-1));
+  copied.forEach(p=>out.addPage(p));out.setProducer('PDF Converter by SRIZON');sp(0,85);
+  return[new Blob([await out.save()],{type:'application/pdf'}),`${bname(file)}_split.pdf`];
+}
+async function doCompress(file,level){
+  if(typeof PDFLib==='undefined')throw new Error('pdf-lib not loaded.');
+  const ab=await rDAB(file);sp(0,28);
+  const pdf=await PDFLib.PDFDocument.load(ab,{ignoreEncryption:true});
+  pdf.setTitle('');pdf.setAuthor('');pdf.setSubject('');pdf.setKeywords([]);
+  pdf.setProducer('PDF Converter by SRIZON');pdf.setCreator('PDF Converter by SRIZON');
+  sp(0,62);const bytes=await pdf.save({useObjectStreams:level!=='low',addDefaultPage:false});
+  const saved=Math.round((1-bytes.length/file.size)*100);
+  if(saved>0)notify(`Compressed: ~${saved}% smaller`,'success');else notify('PDF already well-optimized','info');
+  sp(0,88);return[new Blob([bytes],{type:'application/pdf'}),`${bname(file)}_compressed.pdf`];
+}
+
+/* ═══════════ HISTORY ═══════════ */
+function rHistory(panel){
+  panel.innerHTML='';
+  const hdr=ce('div');hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:18px';
+  hdr.innerHTML=`<h2 style="color:#fff;font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700">CONVERSION HISTORY</h2>${S.hist.length?'<button onclick="clrHist()" style="background:rgba(255,68,102,.1);border:1px solid rgba(255,68,102,.3);color:#ff4466;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;font-family:Rajdhani,sans-serif">Clear All</button>':''}`;
+  panel.appendChild(hdr);
+  if(!S.hist.length){const e=ce('div','history-empty');e.textContent='No conversions yet';panel.appendChild(e);return}
+  S.hist.forEach(h=>{const it=ce('div','history-item');it.innerHTML=`<span class="history-icon">${h.icon}</span><div style="flex:1"><div class="history-action">${h.action}</div><div class="history-time">${h.time}</div></div><span class="history-status">✓ Done</span>`;panel.appendChild(it)});
+}
+function clrHist(){S.hist=[];render();updDH()}
+function updDH(){const d=document.getElementById('drawer-history');if(!d)return;d.innerHTML=!S.hist.length?'<div class="history-empty">No conversions yet</div>':S.hist.map(h=>`<div class="history-item"><span class="history-icon">${h.icon}</span><div style="flex:1"><div class="history-action">${h.action}</div><div class="history-time">${h.time}</div></div><span class="history-status">✓ Done</span></div>`).join('')}
+function toggleDrawer(){const d=document.getElementById('drawer'),o=document.getElementById('drawer-overlay');const open=d.style.display==='none'||!d.style.display;d.style.display=open?'block':'none';o.style.display=open?'block':'none';if(open)updDH()}
+
+/* ══════════════════════════════════════════════
+   MICROSOFT WORD–STYLE CREATE PDF EDITOR
+══════════════════════════════════════════════ */
+function rCreate(panel){
+  panel.innerHTML='';
+  panel.style.padding='0';panel.style.overflow='hidden';panel.style.background='transparent';
+
+  const shell=ce('div','word-shell');
+
+  // Title Bar
+  const tb=ce('div','word-titlebar');
+  tb.innerHTML=`
+    <div class="word-titlebar-left" style="display:flex;align-items:center;gap:6px">
+      <span style="color:#fff;font-size:18px">📄</span>
+      <button class="word-qs-btn">💾</button>
+      <button class="word-qs-btn">↩</button>
+      <button class="word-qs-btn">↪</button>
+    </div>
+    <div style="position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px">
+      <span id="word-docname" class="word-doc-name" contenteditable="true" style="outline:none;border-bottom:1px solid transparent" onfocus="this.style.borderBottomColor='rgba(255,255,255,.4)'" onblur="this.style.borderBottomColor='transparent'">Untitled Document</span>
+      <span class="word-app-name">— Word</span>
+    </div>
+    <div class="word-titlebar-right">
+      <button class="word-win-btn" onclick="">─</button>
+      <button class="word-win-btn">□</button>
+      <button class="word-win-btn close">✕</button>
+    </div>`;
+  shell.appendChild(tb);
+
+  // Menu Tabs
+  const mb=ce('div','word-menubar');
+  ['File','Home','Insert','Design','Layout','References','Mailings','Review','View'].forEach((tab,i)=>{
+    const it=ce('div','word-menu-item'+(i===1?' active-tab':''));
+    it.textContent=tab;
+    it.onclick=()=>{document.querySelectorAll('.word-menu-item').forEach(x=>x.classList.remove('active-tab'));it.classList.add('active-tab')};
+    mb.appendChild(it);
+  });
+  shell.appendChild(mb);
+
+  // Ribbon
+  const ribbon=ce('div','word-ribbon');
+  ribbon.innerHTML=`
+    <div class="word-ribbon-groups">
+      <!-- Clipboard -->
+      <div class="word-ribbon-group">
+        <div class="word-group-tools">
+          <button class="rb rb-big" onclick="ec('paste')"><span class="rb-icon">📋</span>Paste</button>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <button class="rb" onclick="ec('cut')" title="Cut">✂ Cut</button>
+            <button class="rb" onclick="ec('copy')" title="Copy">⿻ Copy</button>
+            <button class="rb" title="Format Painter">🖌 Format</button>
+          </div>
+        </div>
+        <div class="word-group-name">Clipboard</div>
+      </div>
+      <!-- Font -->
+      <div class="word-ribbon-group">
+        <div class="word-group-tools" style="gap:4px">
+          <select class="rb-select" id="rb-font" style="width:130px" onchange="ec('fontName',this.value)">
+            <option value="Calibri" selected>Calibri (Body)</option>
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Trebuchet MS">Trebuchet MS</option>
+            <option value="Garamond">Garamond</option>
+            <option value="Impact">Impact</option>
+          </select>
+          <select class="rb-select" id="rb-size" style="width:48px" onchange="ec('fontSize',this.value)">
+            ${[8,9,10,11,12,14,16,18,20,24,28,32,36,48,72].map(s=>`<option value="${[8,9,10,11,12,14,16,18,20,24,28,32,36,48,72].indexOf(s)+1}" ${s===11?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="rb" onclick="ec('fontSize', Math.min(7, (+document.getElementById('rb-size').value)+1)); document.getElementById('rb-size').value=Math.min(7,(+document.getElementById('rb-size').value))" title="Grow Font">A⁺</button>
+          <button class="rb" onclick="" title="Shrink Font">A⁻</button>
+        </div>
+        <div class="word-group-tools" style="gap:3px;margin-top:3px">
+          <button class="rb" onclick="ec('bold')" id="rb-bold" title="Bold"><b>B</b></button>
+          <button class="rb" onclick="ec('italic')" id="rb-italic" title="Italic"><i>I</i></button>
+          <button class="rb" onclick="ec('underline')" id="rb-ul" title="Underline"><u>U</u></button>
+          <button class="rb" onclick="ec('strikeThrough')" title="Strikethrough"><s>S</s></button>
+          <button class="rb" onclick="ec('subscript')" title="Subscript">X₂</button>
+          <button class="rb" onclick="ec('superscript')" title="Superscript">X²</button>
+          <div class="rb-sep"></div>
+          <div class="rb-color-wrap rb" onclick="document.getElementById('fc').click()" title="Font Color">
+            <span style="font-size:13px;font-weight:bold">A</span>
+            <div class="rb-color-bar" id="fc-bar" style="background:#ff0000"></div>
+            <input type="color" id="fc" value="#ff0000" style="display:none" oninput="ec('foreColor',this.value);document.getElementById('fc-bar').style.background=this.value"/>
+          </div>
+          <div class="rb-color-wrap rb" onclick="document.getElementById('hc').click()" title="Highlight">
+            <span style="font-size:11px">ab</span>
+            <div class="rb-color-bar" id="hc-bar" style="background:#ffff00"></div>
+            <input type="color" id="hc" value="#ffff00" style="display:none" oninput="ec('hiliteColor',this.value);document.getElementById('hc-bar').style.background=this.value"/>
+          </div>
+        </div>
+        <div class="word-group-name">Font</div>
+      </div>
+      <!-- Paragraph -->
+      <div class="word-ribbon-group">
+        <div class="word-group-tools" style="gap:3px">
+          <button class="rb" onclick="ec('insertUnorderedList')" title="Bullets">≡•</button>
+          <button class="rb" onclick="ec('insertOrderedList')" title="Numbering">1≡</button>
+          <button class="rb" onclick="ec('indent')" title="Indent">→≡</button>
+          <button class="rb" onclick="ec('outdent')" title="Outdent">←≡</button>
+          <div class="rb-sep"></div>
+          <button class="rb" onclick="ec('justifyLeft')" title="Left">≡L</button>
+          <button class="rb" onclick="ec('justifyCenter')" title="Center">≡C</button>
+          <button class="rb" onclick="ec('justifyRight')" title="Right">≡R</button>
+          <button class="rb" onclick="ec('justifyFull')" title="Justify">≡J</button>
+        </div>
+        <div class="word-group-tools" style="gap:3px;margin-top:3px">
+          <button class="rb" onclick="ec('insertHorizontalRule')" title="Line">─</button>
+          <select class="rb-select" style="width:90px" onchange="ec('formatBlock',this.value);this.value=''" >
+            <option value="">Paragraph Style</option>
+            <option value="p">Normal</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+            <option value="h4">Heading 4</option>
+            <option value="blockquote">Quote</option>
+            <option value="pre">Code</option>
+          </select>
+        </div>
+        <div class="word-group-name">Paragraph</div>
+      </div>
+      <!-- Styles -->
+      <div class="word-ribbon-group">
+        <div class="word-group-tools" style="gap:3px">
+          <button class="rb" onclick="applyStyle('normal')" style="font-size:11px;min-width:60px">Normal</button>
+          <button class="rb" onclick="applyStyle('h1')" style="font-size:14px;font-weight:bold;min-width:60px">Heading 1</button>
+          <button class="rb" onclick="applyStyle('h2')" style="font-size:12px;font-weight:bold;min-width:60px">Heading 2</button>
+          <button class="rb" onclick="applyStyle('title')" style="font-size:13px;font-weight:bold;color:#2b579a;min-width:50px">Title</button>
+        </div>
+        <div class="word-group-name">Styles</div>
+      </div>
+      <!-- Insert -->
+      <div class="word-ribbon-group">
+        <div class="word-group-tools" style="gap:3px">
+          <button class="rb rb-big" onclick="insTbl()" title="Table"><span class="rb-icon">⊞</span>Table</button>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <button class="rb" onclick="insImg()" title="Insert Image">🖼 Image</button>
+            <button class="rb" onclick="insLink()" title="Insert Link">🔗 Link</button>
+            <button class="rb" onclick="ec('insertHorizontalRule')" title="Divider">─ Line</button>
+          </div>
+        </div>
+        <div class="word-group-name">Insert</div>
+      </div>
+      <!-- Edit -->
+      <div class="word-ribbon-group">
+        <div class="word-group-tools" style="gap:3px">
+          <button class="rb rb-big" onclick="ec('undo')"><span class="rb-icon">↩</span>Undo</button>
+          <button class="rb rb-big" onclick="ec('redo')"><span class="rb-icon">↪</span>Redo</button>
+          <button class="rb rb-big" onclick="clrEd()" style="color:#cc2222"><span class="rb-icon">🗑</span>Clear</button>
+        </div>
+        <div class="word-group-name">Edit</div>
+      </div>
+    </div>`;
+  shell.appendChild(ribbon);
+
+  // Ruler
+  const rw=ce('div','word-ruler-wrap');
+  const canvas2=document.createElement('canvas');canvas2.className='word-ruler';canvas2.width=794;canvas2.height=20;
+  const rctx=canvas2.getContext('2d');
+  rctx.fillStyle='#f0f0f0';rctx.fillRect(0,0,794,20);
+  rctx.fillStyle='#c8c8c8';rctx.fillRect(0,19,794,1);
+  // margins shading
+  rctx.fillStyle='#dcdcdc';rctx.fillRect(0,0,76,19);rctx.fillRect(718,0,76,19);
+  rctx.strokeStyle='#999';rctx.lineWidth=1;
+  for(let i=0;i<=20;i++){const x=76+i*32.4;rctx.beginPath();rctx.moveTo(x,i%2===0?10:14);rctx.lineTo(x,19);rctx.stroke();if(i>0&&i<20){rctx.fillStyle='#888';rctx.font='8px Arial';rctx.textAlign='center';rctx.fillText(i,x,9)}}
+  rw.appendChild(canvas2);shell.appendChild(rw);
+
+  // Page Area
+  const pa=ce('div','word-page-area');
+  const page=ce('div','word-page');
+  page.id='word-page';
+  const content=ce('div','word-page-content');
+  content.id='word-content';
+  content.contentEditable='true';
+  content.innerHTML=`<p style="text-align:center;font-size:20pt;font-weight:bold;color:#1a1a1a;margin-bottom:20px">Document Title</p>
+<p>Start writing your document here. This editor works just like Microsoft Word — use the ribbon above to format your text, insert tables, add images, and more.</p>
+<p>&nbsp;</p>
+<p>You can use <strong>bold</strong>, <em>italic</em>, <u>underline</u>, different fonts and sizes, colours, bullet lists, numbered lists, tables, and headings.</p>
+<p>&nbsp;</p>
+<p>When ready, click <strong style="color:#2b579a">Export to PDF</strong> below to download a <strong>high-resolution PDF</strong> file.</p>`;
+  // Update word count
+  content.addEventListener('input',()=>{
+    const txt=content.innerText.trim();
+    const wc=txt?txt.split(/\s+/).filter(Boolean).length:0;
+    const wc_el=document.getElementById('wb-wc');if(wc_el)wc_el.textContent=`${wc} words`;
+    const pc_el=document.getElementById('wb-pg');if(pc_el)pc_el.textContent='Page 1 of 1';
+  });
+  page.appendChild(content);pa.appendChild(page);shell.appendChild(pa);
+
+  // Status bar
+  const sb=ce('div','word-statusbar');
+  sb.innerHTML=`
+    <div class="word-status-left">
+      <span class="word-status-item" id="wb-pg">Page 1 of 1</span>
+      <span class="word-status-item" id="wb-wc">0 words</span>
+      <span class="word-status-item">English (US)</span>
+      <span class="word-status-item" style="color:#00e0a0">✓ Accessibility: Good to go</span>
+    </div>
+    <div class="word-status-right">
+      <div class="word-zoom-row">
+        <span class="word-status-item">100%</span>
+        <input type="range" class="word-zoom-slider" min="50" max="200" value="100" oninput="document.getElementById('word-page').style.transform='scale('+this.value/100+')';document.getElementById('word-page').style.transformOrigin='top center'"/>
+        <span class="word-status-item">─ □ +</span>
+      </div>
+    </div>`;
+  shell.appendChild(sb);
+
+  // Export Strip
+  const es=ce('div','word-export-strip');
+  es.innerHTML=`
+    <button class="word-export-btn" id="ep-btn" onclick="exportWordPDF()">
+      <span style="font-size:16px">📄</span> Export as PDF
+    </button>
+    <button class="word-export-btn secondary" onclick="printWordDoc()">
+      <span>🖨</span> Print
+    </button>
+    <span class="word-export-info">💡 Exports a real high-resolution PDF — no blurriness, no format errors</span>`;
+  shell.appendChild(es);
+  panel.appendChild(shell);
+}
+
+/* ── Word Editor Helpers ── */
+function ec(cmd,val=null){const b=document.getElementById('word-content');if(!b)return;b.focus();document.execCommand(cmd,false,val)}
+function applyStyle(s){
+  const b=document.getElementById('word-content');if(!b)return;b.focus();
+  if(s==='title'){ec('formatBlock','h1');document.execCommand('foreColor',false,'#1f3864');document.execCommand('fontSize',false,'6')}
+  else if(s==='h1'){ec('formatBlock','h1');document.execCommand('foreColor',false,'#2b579a')}
+  else if(s==='h2'){ec('formatBlock','h2');document.execCommand('foreColor',false,'#2b579a')}
+  else{ec('formatBlock','p');document.execCommand('foreColor',false,'#000000');document.execCommand('fontSize',false,'3')}
+}
+function insTbl(){
+  const rows=parseInt(prompt('Number of rows:','3')||'3');
+  const cols=parseInt(prompt('Number of columns:','3')||'3');
+  if(isNaN(rows)||isNaN(cols))return;
+  const tbl=`<table style="border-collapse:collapse;width:100%;margin:10px 0"><thead><tr>${Array.from({length:cols},(_,i)=>`<th style="border:1px solid #bbb;padding:6px 10px;background:#dce6f1;font-weight:bold;text-align:left">Column ${i+1}</th>`).join('')}</tr></thead><tbody>${Array.from({length:rows-1},()=>`<tr>${Array.from({length:cols},()=>'<td style="border:1px solid #ccc;padding:6px 10px;min-width:60px">&nbsp;</td>').join('')}</tr>`).join('')}</tbody></table><p>&nbsp;</p>`;
+  ec('insertHTML',tbl);
+}
+function insImg(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>ec('insertImage',ev.target.result);r.readAsDataURL(f)};
+  inp.click();
+}
+function insLink(){
+  const url=prompt('Enter URL:','https://');if(!url)return;
+  const txt=window.getSelection().toString()||url;
+  ec('insertHTML',`<a href="${url}" target="_blank">${txt}</a>`);
+}
+function clrEd(){if(confirm('Clear all document content?')){const b=document.getElementById('word-content');if(b)b.innerHTML='<p>Start typing...</p>'}}
+
+/* ── High-Res Export from Word Editor ── */
+async function exportWordPDF(){
+  const docName=document.getElementById('word-docname')?.textContent?.trim()||'Untitled Document';
+  const content=document.getElementById('word-content')?.innerHTML||'';
+  const btn=document.getElementById('ep-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span style="display:inline-block;animation:spin 1s linear infinite">⟳</span> Generating high-res PDF...'}
+  notify('Rendering high-resolution PDF — please wait...','info');
+
+  // Build a pixel-perfect A4 render container
+  const wrap=document.createElement('div');
+  // 794px = A4 at 96dpi. Padding matches Word defaults (1 inch = 96px)
+  wrap.style.cssText=[
+    'position:fixed','top:-59999px','left:-59999px',
+    'width:794px','background:#ffffff','color:#111111',
+    'font-family:Calibri,Arial,sans-serif','font-size:12pt','line-height:1.6',
+    'padding:96px 96px 80px','box-sizing:border-box',
+    'word-break:break-word','overflow-wrap:break-word',
+  ].join(';');
+  wrap.innerHTML=content;
+  // Fix any editor-specific styles back to print-safe colours
+  wrap.querySelectorAll('*').forEach(el=>{
+    const cs=window.getComputedStyle(el);
+    const co=cs.color;
+    if(co&&(co.includes('232,232,255')||co.includes('224,224,255')||co==='rgb(232, 232, 255)'||co==='rgb(224, 224, 255)'))el.style.color='#111';
+  });
+  // Make all images fit within page
+  wrap.querySelectorAll('img').forEach(img=>{img.style.maxWidth='100%';img.style.height='auto'});
+  document.body.appendChild(wrap);
+
+  try{
+    // 4× scale = ~288dpi (very sharp, comparable to native PDF text)
+    const RENDER_SCALE=4;
+    const canvas=await html2canvas(wrap,{
+      scale:RENDER_SCALE,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      allowTaint:true,
+      logging:false,
+      imageTimeout:20000,
+      letterRendering:true,
+      removeContainer:false,
+    });
+    document.body.removeChild(wrap);
+
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({unit:'pt',format:'a4',compress:false});
+    const A4W=595.28,A4H=841.89;
+    const iw=canvas.width,ih=canvas.height;
+    const ratio=A4W/iw;
+    const totalH=ih*ratio;
+    let posY=0,pg=0;
+
+    while(posY<totalH){
+      if(pg>0)pdf.addPage('a4','portrait');
+      const srcY=posY/ratio;
+      const srcH=Math.min(A4H/ratio,ih-srcY);
+      const sliceH=srcH*ratio;
+
+      const sl=document.createElement('canvas');sl.width=iw;sl.height=Math.ceil(srcH);
+      const ctx=sl.getContext('2d');
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,iw,Math.ceil(srcH));
+      ctx.drawImage(canvas,0,Math.floor(srcY),iw,Math.ceil(srcH),0,0,iw,Math.ceil(srcH));
+
+      // PNG for sharper text (no JPEG compression artifacts)
+      pdf.addImage(sl.toDataURL('image/png'),'PNG',0,0,A4W,sliceH,undefined,'NONE');
+      posY+=A4H;pg++;
+    }
+
+    const fname=(docName.replace(/[^a-zA-Z0-9_\-\s]/g,'_').trim()||'document')+'.pdf';
+    pdf.save(fname);
+    if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:16px">📄</span> Export as PDF'}
+    notify('High-resolution PDF downloaded!','success');
+    S.hist.unshift({icon:'✦',action:`Created: ${docName}`,time:new Date().toLocaleTimeString()});
+    S.cnt++;const sc=document.getElementById('stat-count');if(sc)sc.textContent=S.cnt;
+    updDH();
+  }catch(err){
+    if(wrap.parentNode)document.body.removeChild(wrap);
+    if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:16px">📄</span> Export as PDF'}
+    notify('PDF error: '+err.message,'error');console.error(err);
+  }
+}
+
+function printWordDoc(){
+  const docName=document.getElementById('word-docname')?.textContent?.trim()||'Document';
+  const content=document.getElementById('word-content')?.innerHTML||'';
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${docName}</title><style>body{font-family:Calibri,Arial,sans-serif;padding:96px;color:#111;max-width:794px;margin:auto;line-height:1.6;font-size:12pt}h1,h2,h3{color:#2b579a}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 10px}@media print{body{padding:0;margin:0}}</style></head><body>${content}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+
+/* ═══════════ INIT ═══════════ */
+render();
+</script>
+</body>
+</html>
